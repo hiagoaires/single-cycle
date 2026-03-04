@@ -171,7 +171,7 @@ cd hardwaredev
 
 ```bash
 chmod +x setup.sh
-chmod +x simu/simu_icarus.sh simu/simu_xcelium.sh
+chmod +x simu/simulate.sh
 chmod +x synth/generic_synth.sh synth/specific_synth.sh synth/check_env.sh
 ```
 
@@ -202,15 +202,6 @@ For module-level tests (example):
 ./simu_icarus.sh registers_bank
 ```
 
-### Xcelium flow (optional)
-
-```bash
-cd simu
-./simu_xcelium.sh cpu_top
-```
-
-> Note: if your local paths differ, adjust path variables inside `simu/simu_xcelium.sh`.
-
 ### Waveforms
 
 ```bash
@@ -236,7 +227,7 @@ Specific synthesis always depends on a previous generic synthesis for the same m
 #### Step 0 — Start at project root
 
 ```bash
-cd /path/to/hardwaredev
+cd /path/to/single-cycle
 ```
 
 Confirm you are at root (must contain `setup.sh`, `synth/`, `source/`):
