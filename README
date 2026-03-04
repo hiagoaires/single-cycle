@@ -1,0 +1,648 @@
+--------------------------------------------------
+CVA Silicon Technologies
+    Hardware Development Repository
+--------------------------------------------------
+
+## 📋 Table of Contents
+
+- [Project Overview](#project-overview)
+- [Repository Structure](#repository-structure)
+- [Project Components](#project-components)
+- [Getting Started](#getting-started)
+- [Simulation](#simulation)
+- [Synthesis](#synthesis)
+- [Testing](#testing)
+- [Important Commands](#important-commands)
+- [Dependencies](#dependencies)
+- [File Descriptions](#file-descriptions)
+- [Troubleshooting](#troubleshooting)
+
+---
+
+## 🎯 Project Overview
+
+This repository contains RTL design, verification and synthesis flows for a MIPS-like CPU study project.
+
+The project is organized in three tracks:
+
+- **Single-cycle CPU** (`source/design/single_cycle/`): complete processor datapath and control.
+- **Multi-cycle CPU** (`source/design/multi_cycle/`): alternative architecture under development.
+- **Practice modules** (`source/design/practices/`): reusable and educational digital design blocks.
+
+### What is included
+
+✅ Verilog/SystemVerilog design source files  
+✅ Verification testbenches and assembly test programs  
+✅ Simulation scripts for Icarus and Xcelium  
+✅ Generic synthesis flow (technology-independent)  
+✅ Sky130-specific synthesis flow (technology mapping)  
+✅ Environment setup and validation scripts (`setup.sh`, `synth/check_env.sh`)  
+
+---
+
+## 📁 Repository Structure
+
+```text
+hardwaredev/
+├── README
+├── setup.sh                         # Local environment bootstrap (.env creation)
+├── .env.example                     # Configuration template
+├── simu/
+│   ├── simu_icarus.sh               # Icarus simulation script
+│   ├── simu_xcelium.sh              # Xcelium simulation script
+│   ├── simu.tcl                     # Xcelium run commands
+│   └── *.vcd                        # Generated waveforms
+├── source/
+│   ├── design/
+│   │   ├── single_cycle/
+│   │   │   ├── alu.v
+│   │   │   ├── control_unit.v
+│   │   │   ├── cpu_top.v
+│   │   │   ├── data_mem.v
+│   │   │   ├── instr_mem.v
+│   │   │   └── registers_bank.v
+│   │   ├── multi_cycle/
+│   │   │   ├── alu.v
+│   │   │   ├── fsm_cu.v
+│   │   │   ├── memory.v
+│   │   │   ├── register_file.v
+│   │   │   └── top_module.v
+│   │   └── practices/
+│   │       ├── alu_prac.v
+│   │       ├── controller.v
+│   │       ├── converter_*.v
+│   │       ├── counter.v
+│   │       ├── displacer*.v
+│   │       ├── driver.v
+│   │       ├── fifo.v
+│   │       ├── lib.v
+│   │       ├── memory.v
+│   │       ├── multiplexor.v
+│   │       ├── proc_ripple_carry_adder.v
+│   │       ├── reg_reset.v
+│   │       ├── register.v
+│   │       ├── struct_ripple_carry_adder.v
+│   │       └── using_function_counter.v
+│   └── verif/
+│       ├── *_test.sv
+│       └── assembly/
+├── synth/
+│   ├── config.sh                    # Loads .env / env vars and validates paths
+│   ├── check_env.sh                 # Environment health check
+│   ├── generic_synth.sh             # Generic synthesis script
+│   ├── specific_synth.sh            # Sky130 mapping synthesis script
+│   ├── synth_genus.tcl              # Cadence Genus script
+│   ├── synth.ys                     # Temporary/generated Yosys script (runtime)
+│   └── *.v / *.json / *.svg         # Generated synthesis outputs
+└── SYNTHESIS_SETUP.md               # Legacy detailed synthesis guide (content integrated here)
+```
+
+---
+
+## 🏗️ Project Components
+
+### 1) Single-cycle CPU (`source/design/single_cycle/`)
+
+Main top module: `cpu_top.v`
+
+Key blocks:
+- `alu.v`: arithmetic/logic operations.
+- `control_unit.v`: instruction decode and control signals.
+- `registers_bank.v`: register file.
+- `instr_mem.v`: instruction memory.
+- `data_mem.v`: data memory.
+
+### 2) Multi-cycle CPU (`source/design/multi_cycle/`)
+
+Alternative architecture split in control and datapath support blocks:
+- `top_module.v`: integration top for multi-cycle design.
+- `fsm_cu.v`: finite-state machine control unit.
+- `alu.v`: ALU for multi-cycle datapath.
+- `register_file.v`: register bank implementation.
+- `memory.v`: memory support module.
+
+### 3) Practice modules (`source/design/practices/`)
+
+Collection of standalone RTL exercises and utility circuits:
+- Converters (binary/gray/one-hot/one-cold)
+- Counters and registers
+- Adders and ALU practice
+- FIFO, memory, mux, shifters, drivers and controller examples
+
+### 4) Verification (`source/verif/`)
+
+Unit and integration testbenches:
+- `alu_test.sv`
+- `control_unit_test.sv`
+- `registers_bank_test.sv`
+- `fifo_test.sv`
+- `converter_gray_bin_test.sv`
+- `cpu_top_test.sv`
+
+Assembly programs are in `source/verif/assembly/`.
+
+---
+
+## 🚀 Getting Started
+
+### 1) Prerequisites
+
+Install required tools:
+
+```bash
+# Ubuntu / Debian
+sudo apt-get update
+sudo apt-get install -y iverilog gtkwave yosys
+
+# Optional (for SVG netlists)
+npm install -g netlistsvg
+```
+
+For Sky130 technology mapping, install Sky130 PDK/liberty files in your machine.
+
+### 2) Clone repository
+
+```bash
+git clone https://github.com/hiagoairesd/hardwaredev.git
+cd hardwaredev
+```
+
+### 3) Make scripts executable (first run only)
+
+```bash
+chmod +x setup.sh
+chmod +x simu/simu_icarus.sh simu/simu_xcelium.sh
+chmod +x synth/generic_synth.sh synth/specific_synth.sh synth/check_env.sh
+```
+
+---
+
+## 🧪 Simulation
+
+### Icarus flow (recommended)
+
+```bash
+cd simu
+./simu_icarus.sh cpu_top
+```
+
+Run with test selector / runtime args:
+
+```bash
+./simu_icarus.sh cpu_top +test=1
+./simu_icarus.sh cpu_top +test=4 +trace
+./simu_icarus.sh cpu_top +test=4 +trace_w
+```
+
+For module-level tests (example):
+
+```bash
+./simu_icarus.sh alu
+./simu_icarus.sh control_unit
+./simu_icarus.sh registers_bank
+```
+
+### Xcelium flow (optional)
+
+```bash
+cd simu
+./simu_xcelium.sh cpu_top
+```
+
+> Note: if your local paths differ, adjust path variables inside `simu/simu_xcelium.sh`.
+
+### Waveforms
+
+```bash
+gtkwave simu/cpu_top.vcd &
+```
+
+---
+
+## 🔨 Synthesis
+
+### Synthesis architecture (current flow)
+
+The synthesis flow has 3 required stages:
+
+1. **Environment setup** (`setup.sh` + `.env`)
+2. **Generic synthesis** (`synth/generic_synth.sh <module>`)
+3. **Sky130 mapping** (`synth/specific_synth.sh <module>`)
+
+Specific synthesis always depends on a previous generic synthesis for the same module.
+
+### Step-by-step (detailed)
+
+#### Step 0 — Start at project root
+
+```bash
+cd /path/to/hardwaredev
+```
+
+Confirm you are at root (must contain `setup.sh`, `synth/`, `source/`):
+
+```bash
+ls
+```
+
+#### Step 1 — Ensure scripts are executable (first run only)
+
+```bash
+chmod +x setup.sh
+chmod +x synth/generic_synth.sh synth/specific_synth.sh synth/check_env.sh
+```
+
+#### Step 2 — Run environment setup
+
+```bash
+./setup.sh
+```
+
+What this does:
+- detects and stores `YOSYS_BIN`;
+- detects `NETLISTSVG_BIN` if available;
+- asks you to provide `SKY130_LIB_PATH` manually;
+- creates/updates local `.env`;
+- validates configuration.
+
+#### Step 3 — Provide Sky130 library path correctly
+
+Paste the path **exactly in this prompt line** shown by `./setup.sh`:
+
+```text
+Enter Sky130 library path (or press Enter to skip):
+```
+
+Example of what to paste after `:`
+
+```text
+/home/user/pdk/volare/sky130/versions/<version>/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_100C_1v80.lib
+```
+
+Then press `Enter`.
+
+When prompted by `setup.sh`, provide a full path to a liberty file, typically:
+
+```bash
+.../sky130_fd_sc_hd__tt_100C_1v80.lib
+```
+
+If you do not know the path, search it in your machine:
+
+```bash
+find ~ -name "*sky130_fd_sc_hd*tt_100C_1v80.lib" 2>/dev/null
+```
+
+Paste one valid result into setup prompt.
+
+If setup finishes and you want to confirm where it was saved, open `.env` and check the line:
+
+```bash
+SKY130_LIB_PATH=...
+```
+
+#### Step 4 — Validate environment explicitly
+
+```bash
+synth/check_env.sh
+```
+
+Proceed only if required checks pass (Yosys + project structure; Sky130 required for specific flow).
+
+#### Step 5 — Run generic synthesis (required)
+
+Go to synthesis folder and synthesize target module:
+
+```bash
+cd synth
+./generic_synth.sh alu
+```
+
+Other examples:
+
+```bash
+./generic_synth.sh control_unit
+./generic_synth.sh registers_bank
+./generic_synth.sh cpu_top
+```
+
+Expected outputs:
+- `<module>_generic_synth.v`
+- `<module>.json`
+- `<module>.svg` (only if `netlistsvg` is installed)
+
+#### Step 6 — Run specific synthesis (Sky130 mapping)
+
+For the same module synthesized in Step 5:
+
+```bash
+./specific_synth.sh alu
+```
+
+CPU example:
+
+```bash
+./generic_synth.sh cpu_top
+./specific_synth.sh cpu_top
+```
+
+Expected output:
+- `<module>_specific_synth.v`
+- Yosys statistics with `stat -liberty`
+
+#### Step 7 — Re-run flow after RTL changes
+
+After editing RTL, re-run both stages for impacted modules:
+
+```bash
+./generic_synth.sh <module>
+./specific_synth.sh <module>
+```
+
+### Manual `.env` configuration (alternative)
+
+If you skip `setup.sh`, configure `.env` manually:
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+Inside `.env`, paste the path **on the same line of `SKY130_LIB_PATH`**, replacing the value after `=`:
+
+```bash
+SKY130_LIB_PATH=/home/hiago/pdk/volare/sky130/versions/<version>/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_100C_1v80.lib
+```
+
+Minimum required variables:
+
+```bash
+YOSYS_BIN=/usr/bin/yosys
+SKY130_LIB_PATH=/absolute/path/to/sky130_fd_sc_hd__tt_100C_1v80.lib
+```
+
+Optional:
+
+```bash
+NETLISTSVG_BIN=/usr/bin/netlistsvg
+```
+
+### CI/CD option
+
+In CI/CD pipelines, inject variables instead of using `.env`:
+
+```yaml
+env:
+  SKY130_LIB_PATH: ${{ secrets.SKY130_LIB_PATH }}
+```
+
+You can also set `YOSYS_BIN` and `NETLISTSVG_BIN` when needed.
+
+### Synthesis checklist (quick)
+
+- [ ] `./setup.sh` executed successfully
+- [ ] `.env` exists in repository root
+- [ ] `SKY130_LIB_PATH` points to an existing `.lib` file
+- [ ] `synth/check_env.sh` passes
+- [ ] `./generic_synth.sh <module>` executed before specific flow
+- [ ] `./specific_synth.sh <module>` generated `<module>_specific_synth.v`
+
+---
+
+## ✅ Testing
+
+### CPU Test Suite
+
+The CPU testbench (`cpu_top_test.sv`) includes 15 comprehensive tests covering instruction types, memory operations, and edge cases:
+
+|Test ID|            Name       |                 Description                   | Key Validation              |
+|-------|-----------------------|-----------------------------------------------|-----------------------------|
+| 1     | `regs`                | Basic register write operations               | R1=1, R2=2, R3=3            |
+| 2     | `basic_swlw`          | Store/Load word integration                   | SW/LW addressing            |
+| 3     | `border_swlw`         | Edge case signed immediates                   | Sign-extension, max memory  |
+| 4     | `rtype`               | R-type ALU operations (ADD, SUB, AND, OR, XOR, SLT) | All ALU results       |
+| 5     | `jump`                | Jump instruction control flow                 | J taken, PC update          |
+| 6     | `beq`                 | Branch-if-equal and loop behavior             | BEQ taken/not-taken         |
+| 7     | `andi`                | AND-immediate (zero-extension)                | RR operations, MEM writes   |
+| 8     | `ori`                 | OR-immediate (zero-extension)                 | RR operations, MEM writes   |
+| 9     | `lui`                 | Load upper immediate                               | Upper 16-bit placement |
+| 10    | `sll`                 | Shift left logical                                 | Variable shift amounts |
+| 11    | `srl`                 | Shift right logical                                | Variable shift amounts |
+| 12    | `bne`                 | Branch-if-not-equal                                | BNE taken/not-taken    |
+| 13    | `blt`                 | Branch-if-less-than (signed)                       | Signed comparison      |
+| 14    | `fibonacci`           | Fibonacci sequence computation (fib(0) to fib(20)) | Loop control, arithmetic, MEM[0-19], fib(20)=4181 |
+| 15    | `fibonacci_overflow` | Fibonacci with 32-bit overflow detection | Overflow at fib(47), wrapped value in MEM[32] |
+
+### Quick CPU regression (Icarus)
+
+```bash
+for i in {1..15}; do
+  echo "Running test $i"
+  (cd simu && ./simu_icarus.sh cpu_top +test=$i) || echo "Test $i failed"
+done
+```
+
+### Run individual CPU tests
+
+```bash
+cd simu
+
+# Lightweight (PC/instr/opcode trace)
+./simu_icarus.sh cpu_top +test=14 +trace
+
+# Detailed (register writes, memory writes, branches, jumps)
+./simu_icarus.sh cpu_top +test=15 +trace_w
+
+# With waveform capture
+./simu_icarus.sh cpu_top +test=4
+```
+
+### Focused unit runs
+
+```bash
+cd simu
+./simu_icarus.sh alu
+./simu_icarus.sh control_unit
+./simu_icarus.sh registers_bank
+./simu_icarus.sh fifo
+```
+
+---
+
+## 📌 Important Commands
+
+### Setup
+
+| Command               |                      Purpose                        |
+|-----------------------|-----------------------------------------------------|
+| `./setup.sh`          | Create/update local `.env` and validate environment |
+| `synth/check_env.sh`  | Run environment health check                        |
+
+### Simulation
+
+| Command                                       | Purpose                |
+|-----------------------------------------------|------------------------|
+| `cd simu && ./simu_icarus.sh cpu_top`         | Run CPU simulation     |
+| `cd simu && ./simu_icarus.sh cpu_top +test=N` | Run specific CPU test  |
+| `cd simu && ./simu_xcelium.sh cpu_top`        | Run Xcelium flow       |
+
+### Synthesis
+
+| Command                                     | Purpose                                |
+|---------------------------------------------|----------------------------------------|
+| `cd synth && ./generic_synth.sh <module>`   | Generic synthesis                      |
+| `cd synth && ./specific_synth.sh <module>`  | Sky130 technology mapping              |
+| `genus -f synth/synth_genus.tcl`            | Cadence Genus synthesis (licensed flow)|
+
+### Debug/inspection
+
+| Command                                                        | Purpose              |
+|----------------------------------------------------------------|----------------------|
+| `gtkwave simu/cpu_top.vcd`                                     | Open waveform        |
+| `find ~ -name "*sky130_fd_sc_hd*tt_100C_1v80.lib" 2>/dev/null` | Locate Sky130 liberty|
+
+---
+
+## 📦 Dependencies
+
+### Required
+
+| Tool                               | Purpose         |
+|------------------------------------|-----------------|
+| Icarus Verilog (`iverilog`, `vvp`) | RTL simulation  |
+| Yosys                              | Logic synthesis |
+
+### Optional
+
+| Tool                 | Purpose                                    |
+|----------------------|--------------------------------------------|
+| GTKWave              | Waveform visualization                     |
+| netlistsvg           | SVG schematic generation from JSON netlist |
+| Xcelium              | Commercial simulation flow                 |
+| Cadence Genus        | Commercial synthesis flow                  |
+| Sky130 liberty files | Technology-specific mapping                |
+
+---
+
+## 📄 File Descriptions
+
+### Single-cycle design (`source/design/single_cycle/`)
+
+| File               | Description           |
+|--------------------|-----------------------|
+| `cpu_top.v`        | CPU top integration   |
+| `alu.v`            | Arithmetic/logic unit |
+| `control_unit.v`   | Control decode logic  |
+| `registers_bank.v` | Register file         |
+| `instr_mem.v`      | Instruction memory    |
+| `data_mem.v`       | Data memory           |
+
+### Multi-cycle design (`source/design/multi_cycle/`)
+
+| File              | Description                 |
+|-------------------|-----------------------------|
+| `top_module.v`    | Multi-cycle top integration |
+| `fsm_cu.v`        | FSM control unit            |
+| `alu.v`           | ALU implementation          |
+| `register_file.v` | Register file               |
+| `memory.v`        | Memory block                |
+
+### Verification (`source/verif/`)
+
+| File                         |                     Description                                      |
+|------------------------------|----------------------------------------------------------------------|
+| `cpu_top_test.sv`            | CPU integration tests (test 1-15)                                    |
+| `alu_test.sv`                | ALU tests                                                            |
+| `control_unit_test.sv`       | Control unit tests                                                   |
+| `registers_bank_test.sv`     | Register bank tests                                                  |
+| `fifo_test.sv`               | FIFO tests                                                           |
+| `converter_gray_bin_test.sv` | Converter tests                                                      |
+| `assembly/`                  | CPU test programs in hex format                                      |
+| `assembly/*.hex`             | Test programs: regs, basic_swlw, fibonacci, fibonacci_overflow, etc. |
+
+### Synthesis scripts (`synth/`)
+
+| File                | Description                                      |
+|---------------------|--------------------------------------------------|
+| `config.sh`         | Loads config from `.env` / environment variables |
+| `check_env.sh`      | Environment checker                              |
+| `generic_synth.sh`  | Generic synthesis flow                           |
+| `specific_synth.sh` | Sky130-mapped synthesis flow                     |
+
+---
+
+## ❓ Troubleshooting
+
+### Error: `SKY130_LIB_PATH is not set`
+
+Set it in `.env` (repository root):
+
+```bash
+SKY130_LIB_PATH=/absolute/path/to/sky130_fd_sc_hd__tt_100C_1v80.lib
+```
+
+Then run:
+
+```bash
+synth/check_env.sh
+cd synth && ./specific_synth.sh <module>
+```
+
+### Error: Sky130 file not found
+
+Check the path and permissions:
+
+```bash
+ls -l "$SKY130_LIB_PATH"
+```
+
+### Error: Yosys not found
+
+Install or set custom binary path in `.env`:
+
+```bash
+YOSYS_BIN=/absolute/path/to/yosys
+```
+
+### Warning: netlistsvg not available
+
+Synthesis still works; only SVG generation is skipped.
+Install optionally:
+
+```bash
+npm install -g netlistsvg
+```
+
+### CPU netlist appears too small after synthesis
+
+If instruction memory is empty/uninitialized, logic may be optimized aggressively.
+Use initialized program memory when evaluating full CPU synthesis results.
+
+### Simulation and synthesis dependency
+
+Simulation is **not** required before synthesis.
+Only requirement for specific synthesis is to run generic synthesis first.
+
+---
+
+## 🔗 Branch Information
+
+- Current branch: `hiago_dev`
+- Repository: `hiagoairesd/hardwaredev`
+
+---
+
+## 👥 Contributors
+
+- **Hiago Aires** — Lead developer
+
+---
+
+## 📝 License
+
+Part of CVA Silicon Technologies course project.
+
+---
+
+**Last Updated:** March 3, 2026  
+**Status:** Active Development

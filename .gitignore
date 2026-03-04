@@ -1,0 +1,16 @@
+xrun.*
+xcelium.d*
+
+*.log
+*.out
+*.vcd
+
+*_synth.v
+
+*.json
+*.svg
+*.ys
+
+# Configuration
+.env
+.env.local
