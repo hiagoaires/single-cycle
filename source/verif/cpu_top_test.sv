@@ -191,6 +191,7 @@ module cpu_top_test();
     task automatic pick_test(input integer test_id);
         begin
             case(test_id)
+                0:  $readmemh("../source/verif/assembly/integration.hex",        DUT.instr_mem_inst.mem);
                 1:  $readmemh("../source/verif/assembly/regs.hex",               DUT.instr_mem_inst.mem);
                 2:  $readmemh("../source/verif/assembly/basic_swlw.hex",         DUT.instr_mem_inst.mem);
                 3:  $readmemh("../source/verif/assembly/border_swlw.hex",        DUT.instr_mem_inst.mem);
@@ -742,6 +743,7 @@ module cpu_top_test();
 
             // 5) Check results
             case (id)
+                0:  check_integration();
                 1:  check_regs();
                 2:  check_basic_swlw();
                 3:  check_border_swlw();
