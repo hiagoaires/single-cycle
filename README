@@ -3,6 +3,17 @@ CVA Silicon Technologies
     Hardware Development Repository
 --------------------------------------------------
 
+**MIPS-like Single-cycle Processor Project**
+
+Developed as part of the Operating Systems course at UFCG (Universidade Federal de Campina Grande)
+
+**Student:** Hiago Emanuel Aires Diniz  
+**ID:** 122110390  
+**Course:** Sistemas Operacionais  
+**Institution:** UFCG
+
+---
+
 ## 📋 Table of Contents
 
 - [Project Overview](#project-overview)
@@ -23,17 +34,15 @@ CVA Silicon Technologies
 
 This repository contains RTL design, verification and synthesis flows for a MIPS-like CPU study project.
 
-The project is organized in three tracks:
+The project focuses on:
 
 - **Single-cycle CPU** (`source/design/single_cycle/`): complete processor datapath and control.
-- **Multi-cycle CPU** (`source/design/multi_cycle/`): alternative architecture under development.
-- **Practice modules** (`source/design/practices/`): reusable and educational digital design blocks.
 
 ### What is included
 
 ✅ Verilog/SystemVerilog design source files  
 ✅ Verification testbenches and assembly test programs  
-✅ Simulation scripts for Icarus and Xcelium  
+✅ Simulation scripts for Icarus Verilog  
 ✅ Generic synthesis flow (technology-independent)  
 ✅ Sky130-specific synthesis flow (technology mapping)  
 ✅ Environment setup and validation scripts (`setup.sh`, `synth/check_env.sh`)  
@@ -43,58 +52,54 @@ The project is organized in three tracks:
 ## 📁 Repository Structure
 
 ```text
-hardwaredev/
+single-cycle/
 ├── README
 ├── setup.sh                         # Local environment bootstrap (.env creation)
 ├── .env.example                     # Configuration template
+├── .env                             # Local environment configuration (generated)
 ├── simu/
-│   ├── simu_icarus.sh               # Icarus simulation script
-│   ├── simu_xcelium.sh              # Xcelium simulation script
-│   ├── simu.tcl                     # Xcelium run commands
-│   └── *.vcd                        # Generated waveforms
+│   ├── simulate.sh                  # Simulation script
+│   └── *.vcd                        # Generated waveform files
 ├── source/
 │   ├── design/
-│   │   ├── single_cycle/
-│   │   │   ├── alu.v
-│   │   │   ├── control_unit.v
-│   │   │   ├── cpu_top.v
-│   │   │   ├── data_mem.v
-│   │   │   ├── instr_mem.v
-│   │   │   └── registers_bank.v
-│   │   ├── multi_cycle/
-│   │   │   ├── alu.v
-│   │   │   ├── fsm_cu.v
-│   │   │   ├── memory.v
-│   │   │   ├── register_file.v
-│   │   │   └── top_module.v
-│   │   └── practices/
-│   │       ├── alu_prac.v
-│   │       ├── controller.v
-│   │       ├── converter_*.v
-│   │       ├── counter.v
-│   │       ├── displacer*.v
-│   │       ├── driver.v
-│   │       ├── fifo.v
-│   │       ├── lib.v
-│   │       ├── memory.v
-│   │       ├── multiplexor.v
-│   │       ├── proc_ripple_carry_adder.v
-│   │       ├── reg_reset.v
-│   │       ├── register.v
-│   │       ├── struct_ripple_carry_adder.v
-│   │       └── using_function_counter.v
+│   │   └── single_cycle/
+│   │       ├── alu.v
+│   │       ├── control_unit.v
+│   │       ├── cpu_top.v
+│   │       ├── data_mem.v
+│   │       ├── instr_mem.v
+│   │       └── registers_bank.v
 │   └── verif/
-│       ├── *_test.sv
+│       ├── alu_test.sv
+│       ├── control_unit_test.sv
+│       ├── cpu_top_test.sv
+│       ├── registers_bank_test.sv
 │       └── assembly/
-├── synth/
-│   ├── config.sh                    # Loads .env / env vars and validates paths
-│   ├── check_env.sh                 # Environment health check
-│   ├── generic_synth.sh             # Generic synthesis script
-│   ├── specific_synth.sh            # Sky130 mapping synthesis script
-│   ├── synth_genus.tcl              # Cadence Genus script
-│   ├── synth.ys                     # Temporary/generated Yosys script (runtime)
-│   └── *.v / *.json / *.svg         # Generated synthesis outputs
-└── SYNTHESIS_SETUP.md               # Legacy detailed synthesis guide (content integrated here)
+│           ├── andi.hex
+│           ├── basic_swlw.hex
+│           ├── beq.hex
+│           ├── blt.hex
+│           ├── bne.hex
+│           ├── border_swlw.hex
+│           ├── fibonacci.hex
+│           ├── fibonacci_overflow.hex
+│           ├── integration.hex
+│           ├── jump.hex
+│           ├── lui.hex
+│           ├── ori.hex
+│           ├── regs.hex
+│           ├── rtype.hex
+│           ├── sll.hex
+│           └── srl.hex
+└── synth/
+    ├── config.sh                    # Loads .env / env vars and validates paths
+    ├── check_env.sh                 # Environment health check
+    ├── generic_synth.sh             # Generic synthesis script
+    ├── specific_synth.sh            # Sky130 mapping synthesis script
+    ├── *_generic_synth.v            # Generated generic synthesis netlists
+    ├── *_specific_synth.v           # Generated Sky130 synthesis netlists
+    ├── *.json                       # Generated JSON netlists
+    └── *.svg                        # Generated netlist diagrams (if netlistsvg available)
 ```
 
 ---
@@ -112,34 +117,15 @@ Key blocks:
 - `instr_mem.v`: instruction memory.
 - `data_mem.v`: data memory.
 
-### 2) Multi-cycle CPU (`source/design/multi_cycle/`)
-
-Alternative architecture split in control and datapath support blocks:
-- `top_module.v`: integration top for multi-cycle design.
-- `fsm_cu.v`: finite-state machine control unit.
-- `alu.v`: ALU for multi-cycle datapath.
-- `register_file.v`: register bank implementation.
-- `memory.v`: memory support module.
-
-### 3) Practice modules (`source/design/practices/`)
-
-Collection of standalone RTL exercises and utility circuits:
-- Converters (binary/gray/one-hot/one-cold)
-- Counters and registers
-- Adders and ALU practice
-- FIFO, memory, mux, shifters, drivers and controller examples
-
-### 4) Verification (`source/verif/`)
+### 2) Verification (`source/verif/`)
 
 Unit and integration testbenches:
 - `alu_test.sv`
 - `control_unit_test.sv`
 - `registers_bank_test.sv`
-- `fifo_test.sv`
-- `converter_gray_bin_test.sv`
 - `cpu_top_test.sv`
 
-Assembly programs are in `source/verif/assembly/`.
+Assembly programs are in `source/verif/assembly/` (regs.hex, basic_swlw.hex, fibonacci.hex, etc.).
 
 ---
 
@@ -163,8 +149,8 @@ For Sky130 technology mapping, install Sky130 PDK/liberty files in your machine.
 ### 2) Clone repository
 
 ```bash
-git clone https://github.com/hiagoairesd/hardwaredev.git
-cd hardwaredev
+git clone https://github.com/hiagoaires/single-cycle.git
+cd single-cycle
 ```
 
 ### 3) Make scripts executable (first run only)
@@ -179,27 +165,27 @@ chmod +x synth/generic_synth.sh synth/specific_synth.sh synth/check_env.sh
 
 ## 🧪 Simulation
 
-### Icarus flow (recommended)
+### Simulation flow
 
 ```bash
 cd simu
-./simu_icarus.sh cpu_top
+./simulate.sh cpu_top
 ```
 
 Run with test selector / runtime args:
 
 ```bash
-./simu_icarus.sh cpu_top +test=1
-./simu_icarus.sh cpu_top +test=4 +trace
-./simu_icarus.sh cpu_top +test=4 +trace_w
+./simulate.sh cpu_top +test=1
+./simulate.sh cpu_top +test=4 +trace
+./simulate.sh cpu_top +test=4 +trace_w
 ```
 
 For module-level tests (example):
 
 ```bash
-./simu_icarus.sh alu
-./simu_icarus.sh control_unit
-./simu_icarus.sh registers_bank
+./simulate.sh alu
+./simulate.sh control_unit
+./simulate.sh registers_bank
 ```
 
 ### Waveforms
@@ -424,12 +410,12 @@ The CPU testbench (`cpu_top_test.sv`) includes 15 comprehensive tests covering i
 | 14    | `fibonacci`           | Fibonacci sequence computation (fib(0) to fib(20)) | Loop control, arithmetic, MEM[0-19], fib(20)=4181 |
 | 15    | `fibonacci_overflow` | Fibonacci with 32-bit overflow detection | Overflow at fib(47), wrapped value in MEM[32] |
 
-### Quick CPU regression (Icarus)
+### Quick CPU regression
 
 ```bash
 for i in {1..15}; do
   echo "Running test $i"
-  (cd simu && ./simu_icarus.sh cpu_top +test=$i) || echo "Test $i failed"
+  (cd simu && ./simulate.sh cpu_top +test=$i) || echo "Test $i failed"
 done
 ```
 
@@ -439,23 +425,22 @@ done
 cd simu
 
 # Lightweight (PC/instr/opcode trace)
-./simu_icarus.sh cpu_top +test=14 +trace
+./simulate.sh cpu_top +test=14 +trace
 
 # Detailed (register writes, memory writes, branches, jumps)
-./simu_icarus.sh cpu_top +test=15 +trace_w
+./simulate.sh cpu_top +test=15 +trace_w
 
 # With waveform capture
-./simu_icarus.sh cpu_top +test=4
+./simulate.sh cpu_top +test=4
 ```
 
 ### Focused unit runs
 
 ```bash
 cd simu
-./simu_icarus.sh alu
-./simu_icarus.sh control_unit
-./simu_icarus.sh registers_bank
-./simu_icarus.sh fifo
+./simulate.sh alu
+./simulate.sh control_unit
+./simulate.sh registers_bank
 ```
 
 ---
@@ -471,11 +456,10 @@ cd simu
 
 ### Simulation
 
-| Command                                       | Purpose                |
-|-----------------------------------------------|------------------------|
-| `cd simu && ./simu_icarus.sh cpu_top`         | Run CPU simulation     |
-| `cd simu && ./simu_icarus.sh cpu_top +test=N` | Run specific CPU test  |
-| `cd simu && ./simu_xcelium.sh cpu_top`        | Run Xcelium flow       |
+| Command                                     | Purpose                |
+|---------------------------------------------|------------------------|
+| `cd simu && ./simulate.sh cpu_top`          | Run CPU simulation     |
+| `cd simu && ./simulate.sh cpu_top +test=N`  | Run specific CPU test  |
 
 ### Synthesis
 
@@ -483,7 +467,6 @@ cd simu
 |---------------------------------------------|----------------------------------------|
 | `cd synth && ./generic_synth.sh <module>`   | Generic synthesis                      |
 | `cd synth && ./specific_synth.sh <module>`  | Sky130 technology mapping              |
-| `genus -f synth/synth_genus.tcl`            | Cadence Genus synthesis (licensed flow)|
 
 ### Debug/inspection
 
@@ -509,9 +492,7 @@ cd simu
 |----------------------|--------------------------------------------|
 | GTKWave              | Waveform visualization                     |
 | netlistsvg           | SVG schematic generation from JSON netlist |
-| Xcelium              | Commercial simulation flow                 |
-| Cadence Genus        | Commercial synthesis flow                  |
-| Sky130 liberty files | Technology-specific mapping                |
+| Sky130 liberty files | Technology-specific mapping (required for specific synthesis) |
 
 ---
 
@@ -528,15 +509,6 @@ cd simu
 | `instr_mem.v`      | Instruction memory    |
 | `data_mem.v`       | Data memory           |
 
-### Multi-cycle design (`source/design/multi_cycle/`)
-
-| File              | Description                 |
-|-------------------|-----------------------------|
-| `top_module.v`    | Multi-cycle top integration |
-| `fsm_cu.v`        | FSM control unit            |
-| `alu.v`           | ALU implementation          |
-| `register_file.v` | Register file               |
-| `memory.v`        | Memory block                |
 
 ### Verification (`source/verif/`)
 
@@ -546,10 +518,8 @@ cd simu
 | `alu_test.sv`                | ALU tests                                                            |
 | `control_unit_test.sv`       | Control unit tests                                                   |
 | `registers_bank_test.sv`     | Register bank tests                                                  |
-| `fifo_test.sv`               | FIFO tests                                                           |
-| `converter_gray_bin_test.sv` | Converter tests                                                      |
 | `assembly/`                  | CPU test programs in hex format                                      |
-| `assembly/*.hex`             | Test programs: regs, basic_swlw, fibonacci, fibonacci_overflow, etc. |
+| `assembly/*.hex`             | Test programs: regs, basic_swlw, fibonacci, fibonacci_overflow, rtype, beq, bne, blt, andi, ori, lui, sll, srl, border_swlw, jump, integration |
 
 ### Synthesis scripts (`synth/`)
 
@@ -559,6 +529,23 @@ cd simu
 | `check_env.sh`      | Environment checker                              |
 | `generic_synth.sh`  | Generic synthesis flow                           |
 | `specific_synth.sh` | Sky130-mapped synthesis flow                     |
+
+### Generated synthesis outputs (`synth/`)
+
+After running synthesis scripts, the following files are generated:
+
+| File Pattern                | Description                                      | Generated by           |
+|-----------------------------|--------------------------------------------------|------------------------|
+| `<module>_generic_synth.v`  | Technology-independent netlist (generic gates)   | `generic_synth.sh`     |
+| `<module>_specific_synth.v` | Sky130 technology-mapped netlist (standard cells)| `specific_synth.sh`    |
+| `<module>.json`             | JSON representation of netlist for visualization | `generic_synth.sh`     |
+| `<module>.svg`              | Visual schematic diagram of synthesized design   | `generic_synth.sh` (requires netlistsvg) |
+
+**Examples:**
+- `alu_generic_synth.v` - ALU generic synthesis output
+- `cpu_top_specific_synth.v` - CPU top module mapped to Sky130 cells
+- `control_unit.json` - Control unit netlist in JSON format
+- `registers_bank.svg` - Register bank graphical netlist
 
 ---
 
@@ -616,22 +603,20 @@ Only requirement for specific synthesis is to run generic synthesis first.
 
 ---
 
-## 🔗 Branch Information
+## � Author
 
-- Current branch: `hiago_dev`
-- Repository: `hiagoairesd/hardwaredev`
-
----
-
-## 👥 Contributors
-
-- **Hiago Aires** — Lead developer
+- **Hiago Emanuel Aires Diniz** — Student Developer
+  - ID: 122110390
+  - Course: Sistemas Operacionais - UFCG
+  - GitHub: [@hiagoaires](https://github.com/hiagoaires)
 
 ---
 
 ## 📝 License
 
-Part of CVA Silicon Technologies course project.
+This is an academic project developed for educational purposes as part of the Operating Systems course at UFCG (Universidade Federal de Campina Grande).
+
+**Academic Use Only** - This project is intended for learning and academic evaluation.
 
 ---
 
