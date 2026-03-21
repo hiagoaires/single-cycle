@@ -65,15 +65,17 @@ single-cycle/
 │   │   └── single_cycle/
 │   │       ├── alu.v
 │   │       ├── control_unit.v
-│   │       ├── cpu_top.v
+│   │       ├── cpu.v
 │   │       ├── data_mem.v
 │   │       ├── instr_mem.v
-│   │       └── registers_bank.v
+│   │       └── register_file_.v
 │   └── verif/
 │       ├── alu_test.sv
 │       ├── control_unit_test.sv
-│       ├── cpu_top_test.sv
-│       ├── registers_bank_test.sv
+│       ├── cpu_test.sv
+│       ├── data_mem_test.sv
+│       ├── instr_mem_test.sv
+│       ├── register_file_test.sv
 │       └── assembly/
 │           ├── andi.hex
 │           ├── basic_swlw.hex
@@ -108,12 +110,12 @@ single-cycle/
 
 ### 1) Single-cycle CPU (`source/design/single_cycle/`)
 
-Main top module: `cpu_top.v`
+Main top module: `cpu.v`
 
 Key blocks:
 - `alu.v`: arithmetic/logic operations.
 - `control_unit.v`: instruction decode and control signals.
-- `registers_bank.v`: register file.
+- `register_file_.v`: register file.
 - `instr_mem.v`: instruction memory.
 - `data_mem.v`: data memory.
 
@@ -122,9 +124,10 @@ Key blocks:
 Unit and integration testbenches:
 - `alu_test.sv`
 - `control_unit_test.sv`
-- `registers_bank_test.sv`
-- `cpu_top_test.sv`
-
+- `register_file__test.sv`
+- `cpu_test.sv`
+- `data_mem.sv`
+- `instr_mem.sv`
 Assembly programs are in `source/verif/assembly/` (regs.hex, basic_swlw.hex, fibonacci.hex, etc.).
 
 ---
@@ -169,7 +172,7 @@ chmod +x synth/generic_synth.sh synth/specific_synth.sh synth/check_env.sh
 
 ```bash
 cd simu
-./simulate.sh cpu_top
+./simulate.sh cpu
 ```
 
 By default (when no `+test=` is specified), the **integration tests** (test 0) are automatically executed. This provides a quick validation of multiple instructions working together.
@@ -177,9 +180,9 @@ By default (when no `+test=` is specified), the **integration tests** (test 0) a
 Run with test selector / runtime args:
 
 ```bash
-./simulate.sh cpu_top +test=1
-./simulate.sh cpu_top +test=4 +trace
-./simulate.sh cpu_top +test=4 +trace_w
+./simulate.sh cpu +test=1
+./simulate.sh cpu +test=4 +trace
+./simulate.sh cpu +test=4 +trace_w
 ```
 
 For module-level tests (example):
@@ -193,7 +196,7 @@ For module-level tests (example):
 ### Waveforms
 
 ```bash
-gtkwave simu/cpu_top.vcd &
+gtkwave simu/cpu.vcd &
 ```
 
 ---
@@ -302,7 +305,7 @@ Other examples:
 ```bash
 ./generic_synth.sh control_unit
 ./generic_synth.sh registers_bank
-./generic_synth.sh cpu_top
+./generic_synth.sh cpu
 ```
 
 Expected outputs:
@@ -321,8 +324,8 @@ For the same module synthesized in Step 5:
 CPU example:
 
 ```bash
-./generic_synth.sh cpu_top
-./specific_synth.sh cpu_top
+./generic_synth.sh cpu
+./specific_synth.sh cpu
 ```
 
 Expected output:
@@ -392,7 +395,7 @@ You can also set `YOSYS_BIN` and `NETLISTSVG_BIN` when needed.
 
 ### CPU Test Suite
 
-The CPU testbench (`cpu_top_test.sv`) includes 16 comprehensive tests covering instruction types, memory operations, and edge cases:
+The CPU testbench (`cpu_test.sv`) includes 16 comprehensive tests covering instruction types, memory operations, and edge cases:
 
 |Test ID|            Name       |                 Description                   | Key Validation              |
 |-------|-----------------------|-----------------------------------------------|-----------------------------| 
@@ -418,7 +421,7 @@ The CPU testbench (`cpu_top_test.sv`) includes 16 comprehensive tests covering i
 ```bash
 for i in {0..15}; do
   echo "Running test $i"
-  (cd simu && ./simulate.sh cpu_top +test=$i) || echo "Test $i failed"
+  (cd simu && ./simulate.sh cpu +test=$i) || echo "Test $i failed"
 done
 ```
 
@@ -428,16 +431,16 @@ done
 cd simu
 
 # Lightweight (PC/instr/opcode trace)
-./simulate.sh cpu_top +test=14 +trace
+./simulate.sh cpu +test=14 +trace
 
 # Detailed (register writes, memory writes, branches, jumps)
-./simulate.sh cpu_top +test=15 +trace_w
+./simulate.sh cpu +test=15 +trace_w
 
 # With waveform capture
-./simulate.sh cpu_top +test=4
+./simulate.sh cpu +test=4
 
 # Run integration tests (default behavior)
-./simulate.sh cpu_top
+./simulate.sh cpu
 ```
 
 ### Test runtime options (plusargs)
@@ -445,8 +448,8 @@ cd simu
 | Option        | Description                                          | Example                         |
 |---------------|------------------------------------------------------|---------------------------------|
 | `+test=<id>`  | Select test by ID (0-15). If omitted, runs test 0    | `+test=5`                       |
-| `+trace`      | Lightweight trace (PC/instr/opcode per cycle)        | `./simulate.sh cpu_top +trace`  |
-| `+trace_w`    | Detailed trace (register writes, memory, branches)   | `./simulate.sh cpu_top +trace_w`|
+| `+trace`      | Lightweight trace (PC/instr/opcode per cycle)        | `./simulate.sh cpu +trace`  |
+| `+trace_w`    | Detailed trace (register writes, memory, branches)   | `./simulate.sh cpu +trace_w`|
 
 **Default behavior:** When no `+test=<id>` is specified, test 0 (integration) is automatically selected.
 
@@ -472,10 +475,10 @@ cd simu
 
 ### Simulation
 
-| Command                                     | Purpose                |
-|---------------------------------------------|------------------------|
-| `cd simu && ./simulate.sh cpu_top`          | Run CPU simulation     |
-| `cd simu && ./simulate.sh cpu_top +test=N`  | Run specific CPU test  |
+| Command                                 | Purpose                |
+|-----------------------------------------|------------------------|
+| `cd simu && ./simulate.sh cpu`          | Run CPU simulation     |
+| `cd simu && ./simulate.sh cpu +test=N`  | Run specific CPU test  |
 
 ### Synthesis
 
@@ -488,7 +491,7 @@ cd simu
 
 | Command                                                        | Purpose              |
 |----------------------------------------------------------------|----------------------|
-| `gtkwave simu/cpu_top.vcd`                                     | Open waveform        |
+| `gtkwave simu/cpu.vcd`                                     | Open waveform        |
 | `find ~ -name "*sky130_fd_sc_hd*tt_100C_1v80.lib" 2>/dev/null` | Locate Sky130 liberty|
 
 ---
@@ -518,7 +521,7 @@ cd simu
 
 | File               | Description           |
 |--------------------|-----------------------|
-| `cpu_top.v`        | CPU top integration   |
+| `cpu.v`        | CPU top integration   |
 | `alu.v`            | Arithmetic/logic unit |
 | `control_unit.v`   | Control decode logic  |
 | `registers_bank.v` | Register file         |
@@ -530,7 +533,7 @@ cd simu
 
 | File                         |                     Description                                      |
 |------------------------------|----------------------------------------------------------------------|
-| `cpu_top_test.sv`            | CPU integration tests (test 1-15)                                    |
+| `cpu_test.sv`            | CPU integration tests (test 1-15)                                    |
 | `alu_test.sv`                | ALU tests                                                            |
 | `control_unit_test.sv`       | Control unit tests                                                   |
 | `registers_bank_test.sv`     | Register bank tests                                                  |
@@ -559,7 +562,7 @@ After running synthesis scripts, the following files are generated:
 
 **Examples:**
 - `alu_generic_synth.v` - ALU generic synthesis output
-- `cpu_top_specific_synth.v` - CPU top module mapped to Sky130 cells
+- `cpu_specific_synth.v` - CPU top module mapped to Sky130 cells
 - `control_unit.json` - Control unit netlist in JSON format
 - `registers_bank.svg` - Register bank graphical netlist
 
@@ -632,7 +635,7 @@ npm install -g netlistsvg
 
 ### CPU netlist appears too small after synthesis
 
-**Why?** When synthesizing `cpu_top`, the instruction memory is uninitialized, so Yosys aggressively optimizes away all internal logic during synthesis. The resulting netlist contains only the interface (both generic and specific netlists are heavily reduced).
+**Why?** When synthesizing `cpu`, the instruction memory is uninitialized, so Yosys aggressively optimizes away all internal logic during synthesis. The resulting netlist contains only the interface (both generic and specific netlists are heavily reduced).
 
 **Solution:** To see a full-size CPU netlist with complete datapath logic, manually initialize the instruction memory with a program before synthesis. This can be done by modifying the RTL to pre-load a `.hex` program into instruction memory at synthesis time.
 
